@@ -26,7 +26,7 @@ if not WEB_ROOT.exists():
 STATIC_FILES = {
     "/": "index.html", "/index.html": "index.html", "/guide": "guide.html",
     "/guide.html": "guide.html", "/style.css": "style.css", "/guide.css": "guide.css",
-    "/app.js": "app.js", "/flat.js": "flat.js", "/costs.js": "costs.js",
+    "/app.js": "app.js", "/flat.js": "flat.js", "/costs.js": "costs.js", "/reports.js": "reports.js",
 }
 MAX_BODY_BYTES = 2 * 1024 * 1024
 
@@ -50,7 +50,7 @@ class RoomMateServer(ThreadingHTTPServer):
 
     def __init__(self, address: tuple[str, int], storage: Storage, web_root: Path | None = None):
         if address[0] not in ("127.0.0.1", "localhost"):
-            raise ValueError("Roomies must bind to localhost.")
+            raise ValueError("FlatLedger must bind to localhost.")
         self.storage = storage
         self.web_root = Path(web_root) if web_root else WEB_ROOT
         self.check_lock = threading.Lock()
@@ -66,7 +66,7 @@ class RoomMateServer(ThreadingHTTPServer):
 
 class RequestHandler(BaseHTTPRequestHandler):
     server: RoomMateServer
-    server_version = "Roomies/2.2"
+    server_version = "FlatLedger/2.3"
 
     def log_message(self, format, *args):
         # Keep request bodies, room details and shopping URLs out of logs.
@@ -78,7 +78,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         allowed_origins = {f"http://{host}" for host in allowed_hosts}
         hosts = self.headers.get_all("Host", [])
         if len(hosts) != 1 or hosts[0].lower() not in allowed_hosts:
-            self._json(403, {"error": "Only requests addressed to this local Roomies server are accepted."})
+            self._json(403, {"error": "Only requests addressed to this local FlatLedger server are accepted."})
             return False
         origins = self.headers.get_all("Origin", [])
         if len(origins) > 1 or (origins and origins[0].lower() not in allowed_origins):
@@ -171,7 +171,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         except (TimeoutError, ConnectionError):
             self._json(408, {"error": "The request timed out. Please try again."})
         except Exception:
-            self._json(500, {"error": "Roomies could not complete this request. Your previously saved data is preserved."})
+            self._json(500, {"error": "FlatLedger could not complete this request. Your previously saved data is preserved."})
 
     def _check_product(self, identity: str) -> dict:
         return check_product(self.server.storage, identity, self.server.check_lock)
@@ -193,13 +193,13 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif method == "GET" and path == "/api/export":
             format = parse_qs(parsed.query).get("format", ["json"])[0]
             if format == "csv":
-                self._reply(200, storage.export_csv().encode("utf-8-sig"), "text/csv; charset=utf-8", "roomies-price-history.csv")
+                self._reply(200, storage.export_csv().encode("utf-8-sig"), "text/csv; charset=utf-8", "flatledger-price-history.csv")
             elif format == "expenses":
-                self._reply(200, storage.export_expenses_csv().encode("utf-8-sig"), "text/csv; charset=utf-8", "roomies-expense-shares.csv")
+                self._reply(200, storage.export_expenses_csv().encode("utf-8-sig"), "text/csv; charset=utf-8", "flatledger-expense-shares.csv")
             elif format == "repayments":
-                self._reply(200, storage.export_repayments_csv().encode("utf-8-sig"), "text/csv; charset=utf-8", "roomies-repayments.csv")
+                self._reply(200, storage.export_repayments_csv().encode("utf-8-sig"), "text/csv; charset=utf-8", "flatledger-repayments.csv")
             elif format == "json":
-                self._reply(200, json.dumps(storage.export(), indent=2, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8", "roomies-backup.json")
+                self._reply(200, json.dumps(storage.export(), indent=2, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8", "flatledger-backup.json")
             else:
                 raise ValueError("Export format must be json, csv, expenses or repayments.")
         elif method == "PUT" and path == "/api/room":
@@ -264,7 +264,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Roomies: keep track of your flat, room and shared expenses.")
+    parser = argparse.ArgumentParser(description="FlatLedger: keep track of your flat, room and shared expenses.")
     parser.add_argument("--port", type=int, default=8840, help="Local HTTP port (default: 8840).")
     default_db = os.environ.get("ROOMMATE_DB") or str(Path.cwd() / "data" / "roommate.sqlite3")
     parser.add_argument("--db", default=default_db, help="SQLite database path (or ROOMMATE_DB environment variable).")
@@ -281,7 +281,7 @@ def main():
     server.tracker = Tracker(storage, lambda identity: check_product(storage, identity, server.check_lock), interval_seconds=args.check_interval)
     if not args.no_tracker:
         server.tracker.start()
-    print(f"Roomies is ready: http://127.0.0.1:{server.server_port}", flush=True)
+    print(f"FlatLedger is ready: http://127.0.0.1:{server.server_port}", flush=True)
     print("Your data stays in the local database. Press Ctrl+C to stop.", flush=True)
     try:
         server.serve_forever()

@@ -1,4 +1,4 @@
-/* Roomies keeps room positions in centimetres. Python validates records and prices. */
+/* FlatLedger keeps room positions in centimetres. Python validates records and prices. */
 "use strict";
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -268,7 +268,7 @@ async function reload() {
   setSaveStatus("All changes saved locally");
 }
 
-function showView(view) {
+function showView(view, { updateHistory = true } = {}) {
   if (
     ![
       "home",
@@ -282,6 +282,8 @@ function showView(view) {
   )
     return;
   currentView = view;
+  if (updateHistory && location.hash !== `#${view}`)
+    history.pushState(null, "", `#${view}`);
   $$(".view").forEach((section) => {
     const active = section.id === `view-${view}`;
     section.hidden = !active;
@@ -296,8 +298,8 @@ function showView(view) {
     else button.removeAttribute("aria-current");
   });
   $("#breadcrumb").textContent =
-    `Roomies / ${{ home: "Home", room: "My room", flat: "My flat", kitchen: "Kitchen", expenses: "Shared costs", wishlist: "Upgrades · Wishlist", journal: "Upgrades · Price journal" }[view]}`;
-  if (view === "journal") renderJournal();
+    `FlatLedger / ${{ home: "Overview", room: "Space planner", flat: "Inventory", kitchen: "Kitchen stock", expenses: "Expenses", wishlist: "Purchase planning", journal: "Price journal" }[view]}`;
+  if (view === "journal" && state) renderJournal();
 }
 
 function renderAll() {
@@ -1593,199 +1595,19 @@ async function saveRoomSettings(event) {
   }
 }
 
-function productIllustration(product, item) {
-  const holder = node("div", { class: "product-illustration" });
-  holder.append(
+function productSpecification(product, item) {
+  return append(
+    node("div", { class: "product-specification" }),
+    node("span", { class: "eyebrow small" }, "PRODUCT RECORD"),
+    node("strong", {}, item ? item.name : "No placement linked"),
     node(
-      "span",
-      { class: "product-slot" },
-      item ? `Reserved for ${item.name}` : "Choose a reserved place",
+      "small",
+      {},
+      product.width_cm && product.depth_cm
+        ? `${number.format(product.width_cm)} × ${number.format(product.depth_cm)} cm · product footprint`
+        : "Product dimensions not recorded",
     ),
   );
-  const svg = svgNode("svg", {
-    viewBox: "0 0 200 130",
-    role: "img",
-    "aria-label": "Illustration of the item category; not a product photo",
-  });
-  const category = item?.category || "other";
-  const stroke = "#8e987c",
-    fill = "#d8c4a8",
-    pale = "#f7f5ec";
-  svg.append(
-    svgNode("ellipse", {
-      cx: 100,
-      cy: 114,
-      rx: 66,
-      ry: 7,
-      fill: "#d9ddce",
-      opacity: 0.45,
-    }),
-  );
-  if (category === "desk") {
-    svg.append(
-      svgNode("path", {
-        d: "M 35 57 L 142 43 L 174 68 L 68 84 Z",
-        fill,
-        stroke,
-        "stroke-width": 1.3,
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 35 57 V 65 L 68 91 V 84 M 68 84 L174 68 V75 L68 91",
-        fill: "#c8b293",
-        stroke,
-        "stroke-width": 1.2,
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 43 66 V 102 M 73 91 V 115 M 167 75 V 106 M 139 45 V 72",
-        stroke,
-        "stroke-width": 3,
-        fill: "none",
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 79 52 L 126 46 L143 59 L 96 66 Z",
-        fill: pale,
-        stroke: "#a9b69a",
-        "stroke-width": 0.8,
-      }),
-    );
-  } else if (category === "lamp") {
-    svg.append(
-      svgNode("ellipse", {
-        cx: 102,
-        cy: 111,
-        rx: 30,
-        ry: 7,
-        fill: "#b8c3a2",
-        stroke,
-      }),
-    );
-    svg.append(
-      svgNode("path", { d: "M 102 111 V 53", stroke, "stroke-width": 4 }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 85 27 L 118 27 L 139 61 L 65 61 Z",
-        fill: "#ead9b4",
-        stroke,
-        "stroke-width": 1.3,
-      }),
-    );
-    svg.append(
-      svgNode("ellipse", {
-        cx: 102,
-        cy: 61,
-        rx: 37,
-        ry: 7,
-        fill: "#f2e4bd",
-        stroke,
-        "stroke-width": 1,
-      }),
-    );
-  } else if (category === "bed") {
-    svg.append(
-      svgNode("path", {
-        d: "M 30 57 L 94 31 L174 80 L111 111 Z",
-        fill: "#d2dcc1",
-        stroke,
-        "stroke-width": 1.3,
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 30 57 V75 L111 124 L174 94 V80 L111 111 Z",
-        fill,
-        stroke,
-        "stroke-width": 1.2,
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 40 57 L91 39 L113 52 L62 73 Z",
-        fill: pale,
-        stroke,
-        "stroke-width": 0.8,
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 72 81 L134 55",
-        stroke: "#9ba887",
-        "stroke-width": 1.2,
-      }),
-    );
-  } else if (category === "rug") {
-    svg.append(
-      svgNode("path", {
-        d: "M 25 67 L111 37 L177 77 L88 111 Z",
-        fill: "#dfbc9a",
-        stroke,
-        "stroke-width": 1,
-      }),
-    );
-    for (let i = 0; i < 5; i++)
-      svg.append(
-        svgNode("path", {
-          d: `M ${35 + i * 12} ${64 - i * 4} L ${100 + i * 12} ${105 - i * 5}`,
-          stroke: "#f8e6d0",
-          "stroke-width": 3,
-        }),
-      );
-  } else if (category === "curtain") {
-    svg.append(
-      svgNode("path", { d: "M 45 20 H 157", stroke, "stroke-width": 3 }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 49 23 H91 L80 109 H48 Z M 115 23 H155 V109 H123 Z",
-        fill: "#d4d9bd",
-        stroke,
-        "stroke-width": 1.2,
-      }),
-    );
-    for (let i = 0; i < 3; i++)
-      svg.append(
-        svgNode("path", {
-          d: `M ${55 + i * 10} 25 L ${51 + i * 10} 105 M ${123 + i * 10} 25 L ${127 + i * 10} 105`,
-          stroke: "#aeb996",
-          "stroke-width": 0.8,
-        }),
-      );
-  } else {
-    svg.append(
-      svgNode("path", {
-        d: "M 57 31 L131 22 L150 35 V110 L77 121 L57 105 Z",
-        fill,
-        stroke,
-        "stroke-width": 1.3,
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 57 31 L77 43 L150 35 M77 43 V121 M113 39 V116",
-        stroke,
-        "stroke-width": 1.1,
-        fill: "none",
-      }),
-    );
-    svg.append(
-      svgNode("path", {
-        d: "M 106 72 V84 M120 71 V83",
-        stroke,
-        "stroke-width": 1.8,
-      }),
-    );
-  }
-  holder.append(
-    svg,
-    node("span", { class: "illustration-note" }, "Category sketch"),
-  );
-  return holder;
 }
 
 function evaluationLabel(product) {
@@ -1891,10 +1713,10 @@ async function downloadExport(path) {
   const format = new URL(path, window.location.href).searchParams.get("format");
   const filename =
     {
-      csv: "roomies-price-history.csv",
-      expenses: "roomies-expense-shares.csv",
-      repayments: "roomies-repayments.csv",
-    }[format] || "roomies-backup.json";
+      csv: "flatledger-price-history.csv",
+      expenses: "flatledger-expense-shares.csv",
+      repayments: "flatledger-repayments.csv",
+    }[format] || "flatledger-backup.json";
   const url = URL.createObjectURL(await response.blob());
   const link = node("a", { href: url, download: filename });
   document.body.append(link);
@@ -1966,7 +1788,7 @@ function renderWishlist() {
   for (const product of products) {
     const item = itemById(product.item_id),
       card = node("article", { class: "product-card" });
-    card.append(productIllustration(product, item));
+    card.append(productSpecification(product, item));
     const body = node("div", { class: "product-card-content" });
     body.append(
       node("h2", {}, product.name),
@@ -2314,7 +2136,7 @@ function renderPriceChart(product) {
         { class: "chart-empty" },
         product
           ? "Record a product price and known delivery cost to start your price history."
-          : "Your first find will start its own price story here.",
+          : "Add a dated price observation to start the history.",
       ),
     );
     return;
@@ -2714,7 +2536,7 @@ function downloadPlan() {
     type: "image/svg+xml;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);
-  const link = node("a", { href: url, download: "roomies-room-plan.svg" });
+  const link = node("a", { href: url, download: "flatledger-room-plan.svg" });
   document.body.append(link);
   link.click();
   link.remove();
@@ -2730,7 +2552,7 @@ async function readImport(event) {
   try {
     if (file.size > MAX_BACKUP_BYTES)
       throw new Error(
-        "This backup is larger than 32 MiB. Roomies backups must stay within 32 MiB.",
+        "This backup is larger than 32 MiB. FlatLedger backups must stay within 32 MiB.",
       );
     const data = JSON.parse(await file.text());
     if (
@@ -2965,6 +2787,11 @@ function wireEvents() {
 
 async function start() {
   wireEvents();
+  const followLocation = () =>
+    showView(location.hash.slice(1) || "home", { updateHistory: false });
+  window.addEventListener("popstate", followLocation);
+  window.addEventListener("hashchange", followLocation);
+  followLocation();
   setWorkspaceAvailable(false);
   try {
     await reload();
@@ -3001,6 +2828,7 @@ function setWorkspaceAvailable(available) {
     "add-fridge-item",
     "add-expense",
     "export-expenses",
+    "export-spending",
     "add-monthly-bill",
   ];
   controls.forEach((identity) => {

@@ -1,6 +1,6 @@
 # How the project is put together
 
-Roomies has a room plan and a separate flat base. The browser draws the room and collects household inputs. Python validates the inputs, applies the planning and expense rules, and stores the records in SQLite. There are two transports: the original localhost HTTP server and a device-local public browser build using Pyodide. [Browser hosting](BROWSER_HOSTING.md) explains the second path.
+FlatLedger has a room plan and a separate flat base. The browser draws the room and collects household inputs. Python validates the inputs, applies the planning and expense rules, and stores the records in SQLite. There are two transports: the original localhost HTTP server and a device-local public browser build using Pyodide. [Browser hosting](BROWSER_HOSTING.md) explains the second path.
 
 ```mermaid
 flowchart LR
@@ -34,10 +34,17 @@ flowchart LR
 | `web/index.html` | Accessible controls and page structure |
 | `web/app.js` | Selection, drawing, dragging, editing, API requests, journal rendering, export/import controls |
 | `web/flat.js` | Home, flat inventory, kitchen lists, member settings and shared-cost controls |
+| `web/reports.js` | Pure integer-cent aggregation, period/category/search filters and safe CSV export |
 | `web/costs.js` | Repayment forms, monthly bill templates and reviewed bill entry |
 | `web/style.css` | Responsive application layout and appearance |
 | `web/guide.html` | Short guide inside the app |
 | `tests/` | Behavioral checks and regressions |
+
+## Reporting and navigation
+
+`reports.js` derives a report from validated saved expenses. Month selection uses the YYYY-MM prefix of each bill date, so reporting is independent of insertion order and UTC date conversion. All aggregation stays in integer cents. Repayments are absent from spending reports and remain part of the separate lifetime balance calculation. The CSV export neutralizes spreadsheet-formula prefixes in entered text.
+
+The active view is recorded in the URL hash. A direct link, reload or browser back restores the view. The journal waits for state loading before rendering. The overview's room thumbnail removes interactive attributes and duplicate SVG IDs from the editable plan.
 
 ## Flows to follow
 

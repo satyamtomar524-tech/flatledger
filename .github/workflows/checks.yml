@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node --test tests/reports.test.cjs
+      - run: node --check web/reports.js
       - run: node --check web/app.js
       - run: node --check web/flat.js
       - run: node --check web/costs.js

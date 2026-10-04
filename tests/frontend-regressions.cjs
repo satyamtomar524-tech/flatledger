@@ -482,7 +482,7 @@ async function main() {
                 return {
                   text: await response.text(),
                   type: "application/json",
-                  filename: "roomies-backup.json",
+                  filename: "flatledger-backup.json",
                 };
               return response.json();
             },

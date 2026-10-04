@@ -19,7 +19,7 @@ function openDatabase() {
         ),
       );
     request.onblocked = () =>
-      reject(new Error("Close other Roomies tabs, then reload."));
+      reject(new Error("Close other FlatLedger tabs, then reload."));
   });
 }
 

@@ -1,6 +1,6 @@
 # A link my friends can open
 
-**Public website: [Open Roomies](https://roomies-satyam.satyamtomar524.chatgpt.site)**
+**Public website: [Open FlatLedger](https://roomies-satyam.satyamtomar524.chatgpt.site)**
 
 The Python app originally needed a terminal running on my laptop. That was fine for development, but awkward for someone who only wanted to try the idea.
 

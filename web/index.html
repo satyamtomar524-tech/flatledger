@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#607e6c" />
-    <title>Roomies · Your room and flat, organised</title>
+    <meta name="theme-color" content="#142235" />
+    <title>FlatLedger · Household operations workspace</title>
     <link rel="stylesheet" href="/style.css" />
+    <script src="/reports.js" defer></script>
     <script src="/flat.js" defer></script>
     <script src="/costs.js" defer></script>
     <script src="/app.js" defer></script>
@@ -14,47 +15,35 @@
     <a class="skip-link" href="#main">Skip to workspace</a>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Workspace navigation">
-        <a class="brand" href="/" aria-label="Roomies home"
-          ><span class="brand-mark" aria-hidden="true">R</span
+        <a class="brand" href="/" aria-label="FlatLedger home"
+          ><span class="brand-mark" aria-hidden="true">F</span
           ><span
-            >Roomies<span class="brand-note">My room. Our flat.</span></span
+            >FlatLedger<span class="brand-note">Household workspace</span></span
           ></a
         >
-        <div class="workspace-label">YOUR HOME</div>
+        <div class="workspace-label">WORKSPACE</div>
         <nav class="navigation" aria-label="Main">
           <button class="nav-link active" data-view="home" aria-current="page">
-            <span class="nav-icon" aria-hidden="true">⌂</span>Home
+            Overview
           </button>
-          <button class="nav-link" data-view="room">
-            <span class="nav-icon" aria-hidden="true">▦</span>My room
-          </button>
-          <button class="nav-link" data-view="flat">
-            <span class="nav-icon" aria-hidden="true">▤</span>My flat
-          </button>
-          <button class="nav-link" data-view="kitchen">
-            <span class="nav-icon" aria-hidden="true">◫</span>Kitchen
-          </button>
-          <button class="nav-link" data-view="expenses">
-            <span class="nav-icon" aria-hidden="true">€</span>Shared costs
-          </button>
+          <button class="nav-link" data-view="room">Space planner</button>
+          <button class="nav-link" data-view="flat">Inventory</button>
+          <button class="nav-link" data-view="kitchen">Kitchen stock</button>
+          <button class="nav-link" data-view="expenses">Expenses</button>
           <button
             class="nav-link"
             data-view="wishlist"
             data-nav-group="upgrades"
           >
-            <span class="nav-icon" aria-hidden="true">♡</span>Upgrades<span
-              class="nav-count"
-              id="wish-count"
-              >0</span
-            >
+            Purchase planning<span class="nav-count" id="wish-count">0</span>
           </button>
         </nav>
         <div class="sidebar-note">
-          <strong>One place for the everyday.</strong>
-          <p>Where things live, what needs topping up and who paid for what.</p>
-          <a href="/guide" target="_blank" rel="noopener"
-            >How Roomies works ↗</a
-          >
+          <strong>Private by design.</strong>
+          <p>
+            Your records stay on this device. Export a backup to keep them safe.
+          </p>
+          <a href="/guide" target="_blank" rel="noopener">Workspace guide</a>
         </div>
         <div class="sidebar-bottom">
           <span class="status-dot" id="connection-dot"></span
@@ -71,7 +60,7 @@
       </aside>
       <div class="main-shell">
         <header class="topbar">
-          <span class="breadcrumb" id="breadcrumb">Roomies / Home</span>
+          <span class="breadcrumb" id="breadcrumb">FlatLedger / Overview</span>
           <div class="topbar-actions">
             <span class="local-pill"
               ><span class="status-dot"></span>Saved on this computer</span
@@ -101,11 +90,11 @@
           >
             <div class="page-heading">
               <div>
-                <p class="eyebrow">YOUR EVERYDAY, TOGETHER</p>
-                <h1 id="home-heading">My room. My things. Our flat.</h1>
+                <p class="eyebrow">HOUSEHOLD OPERATIONS</p>
+                <h1 id="home-heading">Workspace overview</h1>
                 <p class="heading-copy">
-                  Work out what fits, remember where you kept it and sort out
-                  what you share.
+                  Track your belongings, plan purchases and manage shared
+                  spending.
                 </p>
               </div>
               <span class="home-date" id="home-date"></span>
@@ -115,30 +104,49 @@
               <section class="panel">
                 <div class="panel-heading">
                   <div>
-                    <h2>What’s next?</h2>
-                    <p>A few useful places to start.</p>
+                    <h2>Action queue</h2>
+                    <p>Setup steps and outstanding household tasks.</p>
                   </div>
                 </div>
                 <div id="home-next" class="panel-content action-list"></div>
               </section>
-              <section class="panel sage-panel">
+              <section class="panel">
                 <div class="panel-heading">
                   <div>
-                    <h2>A shared flat that makes sense.</h2>
+                    <h2>Recent expenses</h2>
                     <p id="home-flat-name">My flat</p>
                   </div>
-                </div>
-                <div class="panel-content">
-                  <p>
-                    Give each thing a location. Keep a simple kitchen checklist.
-                    Split a bill with the people who shared it.
-                  </p>
-                  <button class="small-button" data-view="flat">
-                    Open my flat →
+                  <button class="text-button" data-view="expenses">
+                    View ledger
                   </button>
                 </div>
+                <div id="home-recent" class="panel-content"></div>
               </section>
             </div>
+            <section class="panel workspace-snapshot">
+              <div class="panel-heading">
+                <div>
+                  <h2>Space planning</h2>
+                  <p id="home-plan-note">Dimension and clearance checks</p>
+                </div>
+                <button class="small-button" data-view="room">
+                  Open planner
+                </button>
+              </div>
+              <div class="snapshot-content">
+                <div
+                  id="home-plan-preview"
+                  aria-label="Room plan preview"
+                ></div>
+                <div>
+                  <div id="home-space-metrics" class="snapshot-metrics"></div>
+                  <p class="field-help">
+                    A measured 2D plan with defined geometry checks. Confirm
+                    dimensions and access on site before buying.
+                  </p>
+                </div>
+              </div>
+            </section>
           </section>
           <section
             class="view"
@@ -148,8 +156,8 @@
           >
             <div class="page-heading">
               <div>
-                <p class="eyebrow">MY FLAT</p>
-                <h1 id="flat-heading">Where did I keep it?</h1>
+                <p class="eyebrow">ASSET REGISTER</p>
+                <h1 id="flat-heading">Household inventory</h1>
                 <p class="heading-copy">
                   Record flat belongings with their location, exact spot and
                   owner.
@@ -159,7 +167,7 @@
                 <button class="small-button" id="flat-settings-button">
                   Flat & people</button
                 ><button class="primary-button" id="add-flat-item">
-                  + Add a thing
+                  + Add item
                 </button>
               </div>
             </div>
@@ -208,7 +216,7 @@
             <div class="page-heading">
               <div>
                 <p class="eyebrow">KITCHEN</p>
-                <h1 id="kitchen-heading">What’s in the kitchen?</h1>
+                <h1 id="kitchen-heading">Kitchen stock</h1>
                 <p class="heading-copy">
                   Find kitchen things and keep a fridge, freezer and pantry
                   checklist.
@@ -216,9 +224,9 @@
               </div>
               <div class="heading-actions">
                 <button class="small-button" id="add-kitchen-item">
-                  + Kitchen thing</button
+                  + Add equipment</button
                 ><button class="primary-button" id="add-fridge-item">
-                  + Food or staple
+                  + Add stock item
                 </button>
               </div>
             </div>
@@ -287,22 +295,76 @@
           >
             <div class="page-heading">
               <div>
-                <p class="eyebrow">SHARED COSTS</p>
-                <h1 id="expenses-heading">Who owes what?</h1>
+                <p class="eyebrow">SPENDING & BALANCES</p>
+                <h1 id="expenses-heading">Expense ledger</h1>
                 <p class="heading-copy">
                   Add a bill, choose who shared it and keep track of money paid
                   back.
                 </p>
               </div>
               <button class="primary-button" id="add-expense">
-                + Add a shared cost
+                + Add expense
               </button>
             </div>
+            <section
+              class="panel spending-report"
+              aria-labelledby="spending-heading"
+            >
+              <div class="panel-heading">
+                <div>
+                  <h2 id="spending-heading">Spending report</h2>
+                  <p>
+                    Recorded bills by period and category. Repayments are
+                    excluded.
+                  </p>
+                </div>
+                <button class="small-button" id="export-spending">
+                  Export current report
+                </button>
+              </div>
+              <div class="report-filters">
+                <label
+                  >Period<select id="expense-period">
+                    <option value="all">All recorded periods</option>
+                  </select></label
+                >
+                <label
+                  >Category<select id="expense-category">
+                    <option value="all">All categories</option>
+                    <option value="groceries">Groceries</option>
+                    <option value="rent">Rent</option>
+                    <option value="utilities">Utilities</option>
+                    <option value="household">Household</option>
+                    <option value="other">Other</option>
+                  </select></label
+                >
+                <label
+                  >Search expenses<input
+                    id="expense-search"
+                    type="search"
+                    placeholder="Title or notes"
+                    maxlength="500"
+                /></label>
+              </div>
+              <div class="report-body">
+                <div id="spending-metrics" class="report-metrics"></div>
+                <div
+                  id="spending-breakdown"
+                  class="spending-breakdown"
+                  aria-label="Spending by category"
+                ></div>
+              </div>
+              <p
+                class="practical-note"
+                id="expense-filter-note"
+                role="status"
+              ></p>
+            </section>
             <div class="expenses-grid">
               <section class="panel">
                 <div class="panel-heading">
                   <div>
-                    <h2>Our balances</h2>
+                    <h2>Outstanding balances</h2>
                     <p id="expense-total">No shared costs recorded.</p>
                   </div>
                   <button class="text-button" id="expense-people-button">
@@ -317,22 +379,25 @@
               <section class="panel sage-panel">
                 <div class="panel-heading">
                   <div>
-                    <h2>To settle up</h2>
+                    <h2>Suggested repayments</h2>
                     <p>Balances include the repayments you’ve recorded.</p>
                   </div>
                 </div>
                 <div id="settlements-list" class="panel-content"></div>
                 <p class="practical-note">
-                  Already paid someone back? Record it here. Roomies keeps the
-                  record; you make the payment yourself.
+                  Already paid someone back? Record it here. FlatLedger keeps
+                  the record; you make the payment yourself.
                 </p>
               </section>
             </div>
             <section class="panel expense-history">
               <div class="panel-heading">
                 <div>
-                  <h2>Shared cost history</h2>
-                  <p>Each bill can be shared by a different group.</p>
+                  <h2>Recorded expenses</h2>
+                  <p>
+                    Uses the report filters above. Balances always include the
+                    full ledger.
+                  </p>
                 </div>
                 <button class="small-button" id="export-expenses">
                   ↓ Export bill shares
@@ -382,8 +447,8 @@
           >
             <div class="page-heading">
               <div>
-                <p class="eyebrow">MY ROOM</p>
-                <h1 id="room-heading">A place for everything.</h1>
+                <p class="eyebrow">LAYOUT & DIMENSIONS</p>
+                <h1 id="room-heading">Space planner</h1>
                 <p class="heading-copy">
                   Measure your room, then arrange what you own and reserve space
                   for later.
@@ -425,7 +490,7 @@
               >
                 <div class="panel-heading">
                   <div>
-                    <h2 id="plan-heading">Your room, from above</h2>
+                    <h2 id="plan-heading">Floor plan</h2>
                     <p id="plan-subtitle">
                       Every position is measured in centimetres.
                     </p>
@@ -471,7 +536,7 @@
                 <div class="panel-heading">
                   <div>
                     <p class="eyebrow small">THE DETAILS</p>
-                    <h2 id="inspector-heading">Pick a piece</h2>
+                    <h2 id="inspector-heading">Select an item</h2>
                   </div>
                   <button
                     class="icon-button"
@@ -728,8 +793,8 @@
           >
             <div class="page-heading">
               <div>
-                <p class="eyebrow">UPGRADES</p>
-                <h1 id="wishlist-heading">Your next good find.</h1>
+                <p class="eyebrow">PRODUCTS & PRICE EVIDENCE</p>
+                <h1 id="wishlist-heading">Purchase planning</h1>
                 <p class="heading-copy">
                   Link a product to a reserved space and record what you know
                   about it.
@@ -739,14 +804,18 @@
                 + Add product
               </button>
             </div>
-            <div class="upgrade-tabs" role="group" aria-label="Upgrade views">
+            <div
+              class="upgrade-tabs"
+              role="group"
+              aria-label="Purchase planning views"
+            >
               <button data-view="wishlist">Wishlist</button
               ><button data-view="journal">Price journal</button>
             </div>
             <div class="notice neutral-notice">
               <span aria-hidden="true">↳</span>
               <div>
-                <strong>A lower price is only half the story.</strong>
+                <strong>Purchase checks</strong>
                 <p>
                   A purchase recommendation needs a confirmed room, clear
                   placement, matching variant, known delivery price and stock.
@@ -757,9 +826,10 @@
             </div>
             <div class="wish-toolbar">
               <div class="segmented" role="group" aria-label="Filter wishlist">
-                <button class="active" data-wish-filter="all">All finds</button
+                <button class="active" data-wish-filter="all">
+                  All products</button
                 ><button data-wish-filter="ready">Ready to consider</button
-                ><button data-wish-filter="waiting">Still watching</button>
+                ><button data-wish-filter="waiting">Needs confirmation</button>
               </div>
               <button class="small-button" id="check-all">
                 ↻ Check supported links
@@ -767,14 +837,13 @@
             </div>
             <div id="wishlist-grid" class="wishlist-grid"></div>
             <div id="wishlist-empty" class="empty-state" hidden>
-              <span aria-hidden="true">♡</span>
-              <h2>Your next good find starts here.</h2>
+              <h2>No products recorded</h2>
               <p>
                 Reserve a place in the room, then add a product with its exact
                 size, variant and delivered-price target.
               </p>
               <button class="primary-button" id="add-product-empty">
-                + Add a find
+                + Add product
               </button>
             </div>
           </section>
@@ -786,7 +855,7 @@
           >
             <div class="page-heading">
               <div>
-                <p class="eyebrow">UPGRADES</p>
+                <p class="eyebrow">PRODUCTS & PRICE EVIDENCE</p>
                 <h1 id="journal-heading">Keep track of the price.</h1>
                 <p class="heading-copy">
                   Record quotes, compare their history and check supported
@@ -797,7 +866,11 @@
                 + Record a price
               </button>
             </div>
-            <div class="upgrade-tabs" role="group" aria-label="Upgrade views">
+            <div
+              class="upgrade-tabs"
+              role="group"
+              aria-label="Purchase planning views"
+            >
               <button data-view="wishlist">Wishlist</button
               ><button data-view="journal">Price journal</button>
             </div>
@@ -877,7 +950,7 @@
             </section>
           </section>
           <footer class="site-footer">
-            <span>Roomies · Local workspace</span
+            <span>FlatLedger · Local workspace</span
             ><a href="/guide" target="_blank" rel="noopener"
               >How this works ↗</a
             ><span>Keep a backup of the details that matter.</span>
@@ -1254,7 +1327,7 @@
       <form id="flat-settings-form">
         <div class="dialog-heading">
           <div>
-            <p class="eyebrow">MY FLAT</p>
+            <p class="eyebrow">ASSET REGISTER</p>
             <h2 id="flat-dialog-title">Flat & people</h2>
           </div>
           <button
@@ -1462,7 +1535,7 @@
       <form id="expense-form">
         <div class="dialog-heading">
           <div>
-            <p class="eyebrow">SHARED COSTS</p>
+            <p class="eyebrow">SPENDING & BALANCES</p>
             <h2 id="expense-dialog-title">Add a shared cost</h2>
           </div>
           <button

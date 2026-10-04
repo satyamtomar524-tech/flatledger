@@ -5,6 +5,7 @@ const path = require("node:path");
 const http = require("node:http");
 const { chromium } = require("playwright");
 const costsWorkflow = require("./costs-workflow.cjs");
+const reportWorkflow = require("./report-workflow.cjs");
 
 async function main() {
   const root = path.resolve(__dirname, "..");
@@ -98,7 +99,7 @@ async function main() {
     assert.equal((await getState()).summary.area_m2, 10.5);
     assert.match(
       await page.locator(".browser-note").innerText(),
-      /friends their own space/,
+      /each person a separate workspace/,
     );
     const tool = await page.evaluate(async () => ({
       name: window.registeredRoomiesTool.name,
@@ -184,6 +185,7 @@ async function main() {
       1500,
     );
     await costsWorkflow(page, getState, results);
+    await reportWorkflow(page, getState);
 
     await navigate("wishlist");
     assert(!(await page.locator("#check-all").isVisible()));

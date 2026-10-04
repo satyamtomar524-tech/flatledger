@@ -37,13 +37,13 @@ class BrowserWorkspace:
         if method == "GET" and route == "/api/export":
             format = parse_qs(parsed.query).get("format", ["json"])[0]
             exports = {
-                "csv": (storage.export_csv, "roomies-price-history.csv"),
-                "expenses": (storage.export_expenses_csv, "roomies-expense-shares.csv"),
-                "repayments": (storage.export_repayments_csv, "roomies-repayments.csv"),
+                "csv": (storage.export_csv, "flatledger-price-history.csv"),
+                "expenses": (storage.export_expenses_csv, "flatledger-expense-shares.csv"),
+                "repayments": (storage.export_repayments_csv, "flatledger-repayments.csv"),
             }
             if format == "json":
                 return {"text": json.dumps(storage.export(), indent=2, ensure_ascii=False),
-                        "filename": "roomies-backup.json", "type": "application/json"}
+                        "filename": "flatledger-backup.json", "type": "application/json"}
             if format in exports:
                 export, filename = exports[format]
                 return {"text": "\ufeff" + export(), "filename": filename, "type": "text/csv;charset=utf-8"}

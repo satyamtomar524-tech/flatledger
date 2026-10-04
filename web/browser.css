@@ -3,26 +3,28 @@
   gap: 24px;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 26px;
+  padding: 14px 20px;
   margin-bottom: 24px;
-  border: 1px solid #d5e3d8;
-  border-radius: 16px;
-  background: #edf3ee;
+  border: 1px solid #dfe5ed;
+  border-radius: 8px;
+  background: #fff;
 }
 .browser-note strong {
-  font-size: 1.06rem;
+  font-size: 14px;
 }
 .browser-note p {
-  margin: 7px 0 0;
+  margin: 4px 0 0;
   max-width: 660px;
-  line-height: 1.6;
+  line-height: 1.5;
+  color: var(--muted);
+  font-size: 13px;
 }
 .browser-note button {
   flex-shrink: 0;
 }
 #browser-loading {
   font-size: 0.8rem;
-  color: #52675a;
+  color: #59677a;
 }
 .product-watch-row,
 #check-all,
@@ -35,6 +37,6 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 14px;
-    padding: 20px;
+    padding: 16px;
   }
 }

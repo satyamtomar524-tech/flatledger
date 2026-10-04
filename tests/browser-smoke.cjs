@@ -6,6 +6,7 @@ const path = require('node:path');
 const net = require('node:net');
 const { chromium } = require('playwright');
 const flatWorkflow = require('./flat-workflow.cjs');
+const reportWorkflow = require('./report-workflow.cjs');
 
 const root = path.resolve(__dirname, '..');
 const pause = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -112,7 +113,7 @@ async function main() {
     assert.equal((await state()).summary.valid, true);
     const planDownload = page.waitForEvent('download');
     await page.locator('#download-plan').click();
-    assert.equal((await planDownload).suggestedFilename(), 'roomies-room-plan.svg');
+    assert.equal((await planDownload).suggestedFilename(), 'flatledger-room-plan.svg');
 
     // Confirmation here applies only to this test fixture, never the user's sample.
     await page.locator('#room-settings-top').click();
@@ -158,6 +159,7 @@ async function main() {
     assert.equal((await state()).notifications.length, 0);
 
     await flatWorkflow(page, state, results);
+    await reportWorkflow(page, state);
     await page.locator('.navigation .nav-link[data-view="wishlist"]').click();
     await quote(70, 5, 2);
     current = await state();
@@ -245,7 +247,7 @@ async function main() {
       await page.locator('#data-dialog .close-dialog').click();
     }
     await page.goto(`${base}/guide`);
-    assert.match(await page.locator('body').innerText(), /Roomies/);
+    assert.match(await page.locator('body').innerText(), /FlatLedger/);
     assert.deepEqual(errors, []);
     console.log('PASS: room planning, prices, belongings, kitchen, shared costs, repayments, monthly bills, backup, guide, and 320/390px layouts.');
     console.log(`Disposable test evidence: ${path.relative(root, results)}`);

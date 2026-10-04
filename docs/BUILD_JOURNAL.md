@@ -1,5 +1,14 @@
 # Build journal
 
+## 3 October 2026 — FlatLedger 2.3.0
+
+Renamed Roomies to FlatLedger and focused the product on household operations. Replaced playful navigation, large decorative headings and category sketches with restrained typography, a navy sidebar and factual product specifications. The overview shows recorded counts, current-month spending, outstanding tasks, recent bills and a read-only room preview.
+
+Added period/category/search spending reports and a filtered CSV. Reports calculate integer cents from bill dates, exclude repayments and leave lifetime balances unchanged. Hash navigation supports direct links, refresh and browser back. Preserved database names and the public origin so existing browser records remain accessible. The original Python module and commands remain compatible.
+
+Added scope documentation that separates delivered workflows from future shared accounts, retailer integrations and AI. No user-impact measurements are claimed.
+
+
 ## 30 September 2026 — A website to share
 
 I wanted friends to open the project without setting up Python. The browser version runs the existing rules with Pyodide and keeps each visitor's SQLite database in IndexedDB. This avoids maintaining two different geometry and expense engines. I kept manual price records in this version and left automatic retailer requests in the local app.

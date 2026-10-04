@@ -21,7 +21,7 @@ RUNTIME_URL = f"https://registry.npmjs.org/pyodide/-/pyodide-{VERSION}.tgz"
 INTEGRITY = "0YvXxEhfEdpLfb/XkM2BFAeMROq0iMUX2bzzH9pOttyMcWkwq+HbE5uyuGD82LN7y2q+SNvi/6V5JEsOlD2R1A=="
 RUNTIME_FILES = ("pyodide.mjs", "pyodide.asm.mjs", "pyodide.asm.wasm", "pyodide-lock.json", "python_stdlib.zip", "pyodide.mjs.map")
 PYTHON_FILES = ("__init__.py", "browser.py", "expenses.py", "geometry.py", "household.py", "pricing.py", "storage.py")
-WEB_FILES = ("index.html", "guide.html", "guide.css", "style.css", "app.js", "flat.js", "costs.js", "browser.js", "browser-worker.mjs", "browser.css")
+WEB_FILES = ("index.html", "guide.html", "guide.css", "style.css", "app.js", "flat.js", "costs.js", "reports.js", "browser.js", "browser-worker.mjs", "browser.css")
 OUTPUT_FILES = frozenset(WEB_FILES) | {"roomies-python.zip"} | {
     f"vendor/pyodide/{name}"
     for name in (*RUNTIME_FILES, "PYODIDE-LICENSE", "PYTHON-LICENSE", "NOTICE.txt")
@@ -90,7 +90,7 @@ def build(output, cache):
             entry = zipfile.ZipInfo(f"roommate/{name}", (2026, 1, 1, 0, 0, 0))
             entry.compress_type = zipfile.ZIP_DEFLATED
             bundle.writestr(entry, (ROOT / "roommate" / name).read_bytes())
-    favicon = '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2717%27 fill=%27%23607e6c%27/%3E%3Ctext x=%2717%27 y=%2746%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2740%27%3ER%3C/text%3E%3C/svg%3E" />'
+    favicon = '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2710%27 fill=%27%23315eea%27/%3E%3Ctext x=%2717%27 y=%2746%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2740%27%3EF%3C/text%3E%3C/svg%3E" />'
     for name in ("index.html", "guide.html"):
         path = output / name
         html = path.read_text(encoding="utf-8")
@@ -101,16 +101,16 @@ def build(output, cache):
         if name == "index.html":
             html = html.replace('<script src="./flat.js"', '<link rel="stylesheet" href="./browser.css" />\n<script src="./browser.js" defer></script>\n<script src="./flat.js"')
             html = html.replace("Saved on this computer", "Saved in this browser")
-            html = html.replace("Roomies · Local workspace", "Roomies · Your own workspace")
-            note = '''<aside class="browser-note"><div><strong>Make yourself at home.</strong>
-<p>Try the sample, then make it yours. Your changes stay in this browser. Use Export to keep a backup. Sharing the link gives your friends their own space.</p>
+            html = html.replace("FlatLedger · Local workspace", "FlatLedger · Your own workspace")
+            note = '''<aside class="browser-note"><div><strong>Device-local workspace</strong>
+<p>Your records stay in this browser. Export a backup to move devices. Sharing the application gives each person a separate workspace.</p>
 <p id="browser-loading" role="status">Opening your workspace…</p></div>
-<button id="share-roomies" class="primary-button" type="button">Share Roomies ↗</button></aside>'''
+<button id="share-roomies" class="primary-button" type="button">Share application</button></aside>'''
             html = html.replace('<div id="home-overview"', note + '\n<div id="home-overview"')
             html = html.replace("Manual entries work for any store. Automatic checks work only\n                  for supported public product pages.", "Keep the price, delivery cost and date together, so you know what you checked.")
             html = html.replace("A check failure keeps your previous observation. It does not\n                  create a new price.", "Prices are your own dated records. Check the shop again before buying.")
             html = html.replace("backup. Review the import preview before replacing data.", "backup. Clearing browser data removes your records. Review the import preview before replacing data.")
-            html = html.replace("</head>", '<meta name="description" content="Plan your student room, find your things, keep a kitchen checklist and split the bills. Try Roomies in your browser." />\n</head>')
+            html = html.replace("</head>", '<meta name="description" content="FlatLedger: a private household workspace for inventory, space planning, kitchen stock and expense reporting." />\n</head>')
         else:
             html = html.replace("Automatic checks work only\n            for compatible public pages; unsupported stores can be recorded\n            manually.", "Open a shop link and record what you see. The browser version does not check retailer pages automatically.")
             html = html.replace("A confirmed saved SKU and matching product link are needed for live\n            variant confidence. Checks run while the local server is open. The\n            sample room cannot produce buying alerts.", "The sample room cannot produce buying alerts. Use your own measurements and confirm the exact product before treating a price as a match.")

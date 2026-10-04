@@ -70,7 +70,7 @@ module.exports = async function costsWorkflow(page, getState, results) {
   await page.locator("#export-repayments").click();
   const csvPath = path.join(results, "repayments.csv");
   const csv = await downloaded;
-  assert.equal(csv.suggestedFilename(), "roomies-repayments.csv");
+  assert.equal(csv.suggestedFilename(), "flatledger-repayments.csv");
   await csv.saveAs(csvPath);
   assert.match(await fs.readFile(csvPath, "utf8"), /sender_name/);
   assert.match(

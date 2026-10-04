@@ -1,13 +1,14 @@
 {
-  "name": "roomies-browser-checks",
-  "version": "2.2.1",
+  "name": "flatledger-browser-checks",
+  "version": "2.3.0",
   "private": true,
-  "description": "Optional browser checks for Roomies local and static builds.",
+  "description": "Optional browser checks for FlatLedger local and static builds.",
   "scripts": {
     "test:browser": "node tests/browser-smoke.cjs",
     "test:public": "node tests/browser-public.cjs",
     "test:regressions": "node tests/frontend-regressions.cjs",
-    "check": "node --check web/app.js && node --check web/flat.js && node --check web/costs.js && node --check web/browser.js && node --check web/browser-worker.mjs"
+    "test:reports": "node --test tests/reports.test.cjs",
+    "check": "node --check web/reports.js && node --check web/app.js && node --check web/flat.js && node --check web/costs.js && node --check web/browser.js && node --check web/browser-worker.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

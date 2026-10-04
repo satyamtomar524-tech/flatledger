@@ -141,27 +141,20 @@ function emptyRecord(title, copy) {
   );
 }
 
-function overviewCard(label, text, view, icon, indigo = false) {
-  const card = node("button", {
-    type: "button",
-    class: `overview-card${indigo ? " indigo" : ""}`,
-  });
-  append(
-    card,
-    node("span", { class: "card-icon", "aria-hidden": "true" }, icon),
-    node("span", { class: "card-arrow", "aria-hidden": "true" }, "↗"),
-    node("strong", {}, label),
-    node("p", {}, text),
+function overviewCard(label, value, caption, view) {
+  const card = append(
+    node("button", { type: "button", class: "overview-card" }),
+    node("span", { class: "overview-label" }, label),
+    node("strong", {}, value),
+    node("p", {}, caption),
   );
   card.addEventListener("click", () => showView(view));
   return card;
 }
 
-function nextAction(title, copy, action, icon = "→") {
-  const button = node("button", { type: "button", class: "action-row" });
-  append(
-    button,
-    node("span", { class: "action-icon", "aria-hidden": "true" }, icon),
+function nextAction(title, copy, action) {
+  const button = append(
+    node("button", { type: "button", class: "action-row" }),
     append(node("div"), node("strong", {}, title), node("small", {}, copy)),
     node("span", { "aria-hidden": "true" }, "→"),
   );
@@ -171,103 +164,241 @@ function nextAction(title, copy, action, icon = "→") {
 
 function renderHome() {
   const flat = state.flat;
-  const owned = state.room.items.filter(
-    (item) => item.status === "owned",
-  ).length;
-  const planned = state.room.items.filter(
-    (item) => item.status === "planned",
-  ).length;
   const shopping = flat.fridge.filter((item) => item.status !== "stocked");
+  const thisMonth = expenseReports.summarize(flat.expenses, {
+    month: localDateValue().slice(0, 7),
+  });
+  const settlements = state.flat_summary.expenses?.settlements || [];
   $("#home-date").textContent = new Date().toLocaleDateString("en-GB", {
-    weekday: "long",
     day: "numeric",
     month: "long",
+    year: "numeric",
   });
   $("#home-flat-name").textContent = flat.name;
   $("#home-overview").replaceChildren(
     overviewCard(
-      "My room",
-      `${owned} owned · ${planned} planned${state.room.is_demo ? " · sample plan" : ""}`,
-      "room",
-      "▦",
-    ),
-    overviewCard(
-      "My flat",
-      `${flat.inventory.length} ${flat.inventory.length === 1 ? "thing" : "things"} · ${flat.members.length} ${flat.members.length === 1 ? "person" : "people"}`,
+      "Registered items",
+      String(flat.inventory.length),
+      `${flat.members.length} household ${flat.members.length === 1 ? "member" : "members"}`,
       "flat",
-      "▤",
     ),
     overviewCard(
-      "Kitchen",
-      `${shopping.length} ${shopping.length === 1 ? "item" : "items"} marked low or out`,
-      "kitchen",
-      "◫",
-      true,
-    ),
-    overviewCard(
-      "Shared costs",
-      `${flat.expenses.length} ${flat.expenses.length === 1 ? "bill" : "bills"} · ${moneyCents(state.flat_summary.expenses?.total_cents)} recorded`,
+      "Spending this month",
+      moneyCents(thisMonth.totalCents),
+      `${thisMonth.count} recorded ${thisMonth.count === 1 ? "bill" : "bills"} · EUR`,
       "expenses",
-      "€",
-      true,
+    ),
+    overviewCard(
+      "Kitchen restock",
+      String(shopping.length),
+      "Items marked low or out",
+      "kitchen",
+    ),
+    overviewCard(
+      "Purchase records",
+      String(state.products.length),
+      "Saved products and price evidence",
+      "wishlist",
     ),
   );
   const actions = [];
+  if (flat.is_demo)
+    actions.push(
+      nextAction(
+        "Set up the household",
+        "Name your workspace and add the people included in your ledger.",
+        openFlatSettings,
+      ),
+    );
   if (state.room.is_demo)
     actions.push(
       nextAction(
-        "Start with your measurements",
-        "Replace the example room with your actual walls and openings.",
+        "Replace sample measurements",
+        "The 3 × 3.5 m example is a starting point. Enter your actual room dimensions.",
         openRoomSettings,
-        "▦",
-      ),
-    );
-  else
-    actions.push(
-      nextAction(
-        "Arrange your room",
-        "Check positions and keep space for what comes next.",
-        () => showView("room"),
-        "▦",
-      ),
-    );
-  if (flat.is_demo || flat.members.length === 1)
-    actions.push(
-      nextAction(
-        "Make the flat yours",
-        "Name your flat and add the people you share it with.",
-        openFlatSettings,
-        "▤",
-      ),
-    );
-  else
-    actions.push(
-      nextAction(
-        "Find something in the flat",
-        "Search by item, location or the exact spot.",
-        () => showView("flat"),
-        "▤",
       ),
     );
   if (shopping.length)
     actions.push(
       nextAction(
-        `Check ${shopping.length} shopping-list ${shopping.length === 1 ? "item" : "items"}`,
-        "Your kitchen checklist says these are running low or out.",
+        `${shopping.length} kitchen ${shopping.length === 1 ? "item needs" : "items need"} restocking`,
+        "Review your shopping list before the next shop.",
         () => showView("kitchen"),
-        "◫",
       ),
     );
-  else
+  if (settlements.length)
     actions.push(
       nextAction(
-        "Keep a kitchen checklist",
-        "Record the staples you want to keep an eye on.",
-        () => showView("kitchen"),
-        "◫",
+        `${settlements.length} outstanding ${settlements.length === 1 ? "repayment" : "repayments"}`,
+        "Review balances and record repayments after making them.",
+        () => showView("expenses"),
+      ),
+    );
+  const issues = (state.summary?.issues || []).filter(
+    (issue) => issue.severity !== "warning",
+  );
+  if (issues.length)
+    actions.push(
+      nextAction(
+        `${issues.length} layout ${issues.length === 1 ? "issue" : "issues"} to review`,
+        "Check overlaps, boundaries and defined access space.",
+        () => showView("room"),
+      ),
+    );
+  if (!actions.length)
+    actions.push(
+      nextAction(
+        "Review household records",
+        "No setup steps, low-stock items or unsettled balances are flagged by your entries.",
+        () => showView("flat"),
       ),
     );
   $("#home-next").replaceChildren(...actions);
+  const recent = expenseReports.summarize(flat.expenses).records.slice(0, 4);
+  $("#home-recent").replaceChildren(
+    ...(recent.length
+      ? recent.map((expense) =>
+          append(
+            node("div", { class: "recent-expense" }),
+            append(
+              node("div"),
+              node("strong", {}, expense.title),
+              node(
+                "small",
+                {},
+                `${shortDate(expense.date)} · ${memberName(expense.paid_by)}`,
+              ),
+            ),
+            node("strong", {}, moneyCents(expense.amount_cents)),
+          ),
+        )
+      : [
+          emptyRecord(
+            "No expenses recorded",
+            "Add a bill to see spending and individual balances.",
+          ),
+        ]),
+  );
+  $("#home-plan-note").textContent = state.room.is_demo
+    ? "Sample room · replace dimensions before using fit results"
+    : state.room.name;
+  const preview = $("#room-plan").cloneNode(true);
+  preview.removeAttribute("id");
+  preview.setAttribute(
+    "aria-label",
+    "Read-only preview of the saved room plan",
+  );
+  preview.removeAttribute("tabindex");
+  preview.setAttribute("role", "img");
+  preview
+    .querySelectorAll("[tabindex], [role='button'], [id], [data-item-id]")
+    .forEach((part) => {
+      part.removeAttribute("tabindex");
+      part.removeAttribute("role");
+      part.removeAttribute("id");
+      part.removeAttribute("data-item-id");
+      part.removeAttribute("aria-label");
+    });
+  // The preview contains no controls. Drop pattern references after removing duplicate IDs.
+  preview
+    .querySelectorAll("[fill^='url(']")
+    .forEach((part) => part.setAttribute("fill", "#edf2f8"));
+  $("#home-plan-preview").replaceChildren(preview);
+  $("#home-space-metrics").replaceChildren(
+    metricCard("Room area", `${number.format(state.summary?.area_m2 || 0)} m²`),
+    metricCard(
+      "Available floor",
+      `${number.format(state.summary?.free_m2 || 0)} m²`,
+    ),
+    metricCard(
+      "Reserved items",
+      String(
+        state.room.items.filter((item) => item.status === "planned").length,
+      ),
+    ),
+  );
+}
+
+function currentExpenseReport() {
+  return expenseReports.summarize(state.flat.expenses, {
+    month: $("#expense-period").value,
+    category: $("#expense-category").value,
+    search: $("#expense-search").value,
+  });
+}
+
+function renderSpendingReport() {
+  const select = $("#expense-period"),
+    old = select.value;
+  select.replaceChildren(
+    node("option", { value: "all" }, "All recorded periods"),
+    ...expenseReports.months(state.flat.expenses).map((month) =>
+      node(
+        "option",
+        { value: month },
+        new Date(`${month}-01T12:00:00`).toLocaleDateString("en-GB", {
+          month: "long",
+          year: "numeric",
+        }),
+      ),
+    ),
+  );
+  select.value = [...select.options].some((option) => option.value === old)
+    ? old
+    : "all";
+  const report = currentExpenseReport();
+  $("#spending-metrics").replaceChildren(
+    metricCard(
+      "Recorded spending",
+      moneyCents(report.totalCents),
+      "Selected filters · EUR",
+    ),
+    metricCard("Bills in report", String(report.count), "Repayments excluded"),
+  );
+  $("#spending-breakdown").replaceChildren(
+    ...(report.categories.length
+      ? report.categories.map((entry) => {
+          const bar = node("div", { class: "spending-bar-fill" });
+          bar.style.width = `${(entry.amountCents / report.totalCents) * 100}%`;
+          return append(
+            node("div", { class: "spending-category" }),
+            append(
+              node("div", { class: "spending-category-label" }),
+              node("span", {}, entry.label),
+              node("strong", {}, moneyCents(entry.amountCents)),
+            ),
+            append(
+              node("div", { class: "spending-bar", "aria-hidden": "true" }),
+              bar,
+            ),
+          );
+        })
+      : [
+          emptyRecord(
+            "No spending in this report",
+            "Add an expense or change the filters.",
+          ),
+        ]),
+  );
+  $("#expense-filter-note").textContent =
+    `Showing ${report.count} of ${state.flat.expenses.length} recorded bills. Outstanding balances use all bills and recorded repayments.`;
+  return report;
+}
+
+async function exportSpendingReport() {
+  await flushFlat({ requireSaved: true });
+  const report = currentExpenseReport();
+  const url = URL.createObjectURL(
+    new Blob([expenseReports.csv(report)], { type: "text/csv;charset=utf-8" }),
+  );
+  const link = node("a", {
+    href: url,
+    download: "flatledger-spending-report.csv",
+  });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 function fillOwnerSelect(select, selected = "") {
@@ -670,9 +801,7 @@ function renderExpenses() {
           ),
         ]),
   );
-  const records = [...state.flat.expenses].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  );
+  const records = renderSpendingReport().records;
   $("#expense-list").replaceChildren(
     ...(records.length
       ? records.map((expense) => {
@@ -735,8 +864,8 @@ function renderExpenses() {
         })
       : [
           emptyRecord(
-            "Your first shared bill goes here.",
-            "Choose the payer and only the people who shared that cost.",
+            "No expenses match this report",
+            "Add a bill or change the filters above.",
           ),
         ]),
   );
@@ -1054,6 +1183,13 @@ async function submitFlatRecord(event, kind) {
 }
 
 function wireHouseholdEvents() {
+  ["expense-period", "expense-category"].forEach((key) =>
+    $(`#${key}`).addEventListener("change", renderExpenses),
+  );
+  $("#expense-search").addEventListener("input", renderExpenses);
+  $("#export-spending").addEventListener("click", () =>
+    exportSpendingReport().catch((error) => toast(error.message, true)),
+  );
   wireCostEvents();
   $("#room-settings-local").addEventListener("click", openRoomSettings);
   [

@@ -1,85 +1,69 @@
-# Roomies
+# FlatLedger
 
-**My room. My things. Our flat.**
+**A private workspace for household inventory, space planning and shared spending.**
 
-I wanted to know how my room could look before buying more things. Would a bed fit? Where could I keep a table? Could I leave a space for a lamp that I don't have yet?
+I started with a practical question: would a new desk fit in my room before I bought it? I also needed a way to remember where things were kept and keep shared bills clear. FlatLedger brings those tasks into one workspace. The focus is useful records and checks that I can explain and test.
 
-Then the idea got bigger. I also wanted to remember where I kept my things, check what was in the kitchen, and work out shared bills with flatmates. That is what Roomies brings together.
+**[Open the application](https://roomies-satyam.satyamtomar524.chatgpt.site/)** · [Project guide](docs/PROJECT_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [Verification](docs/VERIFICATION.md)
 
-![Roomies home screen](docs/screenshots/home-desktop.png)
+![FlatLedger workspace overview](docs/screenshots/home-desktop.png)
 
-## What it does
+## Core workflows
 
-| Page | What you can do |
+| Area | Purpose |
 |---|---|
-| Home | See what's useful next and open the right page |
-| My room | Move measured furniture, reserve space for future items and try wall and floor colours |
-| My flat | Save what you own, who owns it, and exactly where it is kept |
-| Kitchen | Keep a fridge, freezer and pantry checklist; see what is running low |
-| Shared costs | Split bills, record money paid back and save monthly bill details |
-| Upgrades | Save products, compare their size with your plan and keep dated price records |
+| Overview | See this month's spending, inventory counts, restock tasks, recent bills and a room preview |
+| Space planner | Arrange measured furniture; check boundaries, overlaps and defined clearances; reserve future space |
+| Inventory | Record an item's owner, quantity, room and exact storage location; search and filter records |
+| Kitchen stock | Maintain fridge, freezer and pantry entries; turn low/out entries into a shopping checklist |
+| Expenses | Split bills in integer cents, record repayments, review monthly bill templates, filter spending by period/category and export reports |
+| Purchase planning | Link exact product dimensions to a reservation and keep dated price, delivery and variant evidence |
 
-The room starts with a clearly labelled **3 × 3.5 m sample**. It is there to try the planner. Replace it with your measurements when you are ready. The flat starts empty, with one placeholder person called Me.
+The application starts with a labelled **3 × 3.5 m sample room** and an empty household ledger. Replace the sample dimensions before relying on a fit result. No possessions or financial records are invented.
 
-## Open it in your browser
+## What is feasible today
 
-**[Try Roomies →](https://roomies-satyam.satyamtomar524.chatgpt.site)**
+This release is a **single-workspace household tool**. A person can maintain the household records and use exports to discuss costs with flatmates. The public website saves each visitor's SQLite database in their own browser through IndexedDB. Sharing the application link gives a friend a separate workspace. Export a backup to move between devices; clearing site data removes stored records.
 
-The public browser version lets friends try Roomies without installing Python. Each person gets their own workspace, saved on that device. The Share Roomies button shares the website, not your records. Export a backup before clearing browser data or changing devices.
+The expense report filters **recorded bills**, using their bill date. Repayments change outstanding balances without increasing spending. Reports use the selected period/category/search; balances always use the complete ledger. All amounts are EUR; there is no currency conversion or bank connection.
 
-Room planning, flat and kitchen lists, shared costs, repayments, monthly bills and manual price records work in the browser. It has no shared accounts or live sync between flatmates. Automatic retailer checks remain a feature of the local app below.
+The room planner uses rectangular footprints and explicit clearance rules. It supports rough planning, not construction drawings or 3D rendering. Purchase checks are deterministic rules, not an AI model. The browser edition uses manual price observations. The local server can check a narrow class of permitted public JSON-LD product pages; no real retailer has yet been demonstrated as compatible. There is no always-on shopping crawler.
 
-## Run it
+Live household accounts and synchronization are future work. They would require authentication, permissions, conflict handling and a hosted database. See the [scope and feasibility record](docs/PRODUCT_SCOPE.md).
 
-You need Python 3.10 or newer. The app itself uses Python's standard library, so there is no API key or database server to set up.
+## Run locally
 
-```sh
-git clone https://github.com/satyamtomar524-tech/roomies.git
-cd roomies
-python -m roommate
-```
-
-On Windows, you can run `py -m roommate` or `./start.ps1`. Open the local address printed in the terminal. Keep that terminal running while using the app; Ctrl+C stops it.
-
-The module is still called `roommate` so older working copies keep working. Installing the package with `pip install .` also gives you the `roomies` command. Use `python -m roommate --no-tracker` if you only want planning and manual records.
-
-## A small example
-
-Save a kettle as **Kitchen → Worktop beside the sink → Shared**. Mark milk as **Low** and it appears on the shopping list.
-
-For a shared bill, say one person pays €30 for groceries for two people. Each person's share is €15. When the other person pays back €15, record that repayment: both balances become zero, and total spending stays €30.
-
-For rent or internet, save a monthly bill once. When it is paid, open the saved details, check the amount and date, and record it. The app stops the same saved bill being recorded twice for the same month. Templates never create charges on their own.
-
-## How I built it
-
-Python handles the rules and local HTTP API. SQLite stores the records. Plain JavaScript handles the forms, and SVG draws the room. Shared amounts are stored as whole cents so rounding cannot lose money. The public build uses Pyodide to run those same Python rules in a browser worker and saves the database in IndexedDB.
-
-The idea and requirements are mine. I used coding assistance to build and review the implementation. I have kept the code, tests and guide together so I can understand the decisions and learn from the project.
-
-Start with the [project guide](docs/PROJECT_GUIDE.md). The [architecture](docs/ARCHITECTURE.md) shows where each action goes in the code. [Verification](docs/VERIFICATION.md) records the checks, and [portfolio notes](docs/PORTFOLIO.md) give an accurate project description.
+Python 3.10 or later; the application has no third-party Python runtime dependencies.
 
 ```sh
-python -m unittest discover -s tests -v
-node --check web/app.js
-node --check web/flat.js
-node --check web/costs.js
+git clone https://github.com/satyamtomar524-tech/flatledger.git
+cd flatledger
+python -m roommate --no-tracker
 ```
 
-Browser checks are optional development tools. Their setup is in the verification guide. [GitHub Actions](https://github.com/satyamtomar524-tech/roomies/actions) runs the tests for each update.
+Open `http://127.0.0.1:8765`. Installing with `pip install .` also exposes the `flatledger` command. The original `roommate` module and `roomies` command remain compatible. The existing public URL and browser storage namespace are retained through the rename to preserve records.
 
-## What this version covers
+## Implementation and checks
 
-- The local app stores data on one computer; the public website stores it in each visitor's browser. Flatmate names are labels, so there are no shared logins or live phone-to-phone updates. Repayments are records of payments you made yourself.
-- The room is a rough rectangular plan with dimension and clearance checks. Colours are schematic; it is not a construction drawing or a 3D rendering.
-- Live price checks work only with compatible public product pages that permit crawling. No real retailer has been demonstrated as compatible yet. Manual price records work independently. Blank shipping stays unknown, and checks run only while the server is open.
+Python validates records, calculates geometry and expense splits, and persists SQLite transactions. Plain JavaScript and SVG handle the interface. The static version runs the same Python rules in a Pyodide worker and serves its runtime files from the same origin. No external AI service or API key is required.
 
-Use the data menu for a complete backup. It includes bills, repayments and monthly templates as well as the room and flat. Keep your actual backups private; runtime databases are excluded from Git. [Data and rules](docs/DATA_AND_RULES.md) explains older backup formats and price evidence.
+```sh
+python -B -m unittest discover -s tests -q
+node --test tests/reports.test.cjs
+npm install --ignore-scripts
+npm run check
+npm run test:browser
+npm run test:regressions
+python scripts/build_browser.py
+npm run test:public
+```
 
-To build the shareable version yourself, see [browser hosting](docs/BROWSER_HOSTING.md).
+Browser checks use disposable databases. [Verification instructions](docs/VERIFICATION.md) include installed-browser settings and the static regression command. [GitHub Actions](https://github.com/satyamtomar524-tech/flatledger/actions) runs the checks on updates.
 
-## References
+The project was developed with coding assistance. [Portfolio notes](docs/PORTFOLIO.md) describe the implementation and an interview demonstration. Actual use, savings and productivity improvements have not been measured.
 
-[Room-Planner](https://github.com/EricAndrechek/Room-Planner) and [price-tracker](https://github.com/sonoyumi/price-tracker) were reviewed as feature references for the original room and price idea. Their source code was not copied.
+## References and license
+
+[Room-Planner](https://github.com/EricAndrechek/Room-Planner) and [price-tracker](https://github.com/sonoyumi/price-tracker) were feature references for the initial idea. Their source was not copied.
 
 MIT license · Satyam Tomar

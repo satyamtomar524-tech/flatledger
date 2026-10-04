@@ -34,7 +34,7 @@ class BrowserWorkspaceTests(unittest.TestCase):
         saved = self.call("/api/flat", "PUT", flat)
         self.assertEqual(saved["flat_summary"]["expenses"]["settlements"][0]["amount_cents"], 1501)
         backup = self.call("/api/export")
-        self.assertEqual(backup["filename"], "roomies-backup.json")
+        self.assertEqual(backup["filename"], "flatledger-backup.json")
         self.call("/api/reset", "POST")
         restored = self.call("/api/import", "POST", json.loads(backup["text"]))
         self.assertEqual(restored["flat"], saved["flat"])

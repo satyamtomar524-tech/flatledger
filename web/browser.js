@@ -35,7 +35,7 @@
         async (lock) => {
           if (!lock)
             throw new Error(
-              "Roomies is already open in another tab. Close that tab, then refresh here.",
+              "FlatLedger is already open in another tab. Close that tab, then refresh here.",
             );
           worker = new Worker(
             new URL("./browser-worker.mjs", document.baseURI),
@@ -55,7 +55,7 @@
           worker.onerror = () =>
             fail(
               new Error(
-                "Roomies could not load its app files. Check your connection, then refresh.",
+                "FlatLedger could not load its app files. Check your connection, then refresh.",
               ),
             );
           resolve();
@@ -125,13 +125,13 @@
         try {
           if (navigator.share)
             await navigator.share({
-              title: "Roomies",
-              text: "My room. My things. Our flat. Try Roomies.",
+              title: "FlatLedger",
+              text: "Plan your space and manage household spending with FlatLedger.",
               url,
             });
           else {
             await navigator.clipboard.writeText(url);
-            status("Link copied. Send it to your friends!");
+            status("Application link copied.");
           }
         } catch (error) {
           if (error.name !== "AbortError") status(`Share this link: ${url}`);
@@ -148,7 +148,7 @@
           context.registerTool(
             {
               name: "read_roomies_overview",
-              title: "Read Roomies overview",
+              title: "Read FlatLedger overview",
               description:
                 "Read the saved room area, flat totals and shared-cost balances in this browser. Does not change records.",
               inputSchema: {

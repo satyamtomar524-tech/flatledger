@@ -1,12 +1,14 @@
 # Verification record
 
-Checked on 30 September 2026 for Roomies 2.2.1. This records local evidence. Remote results are available in the repository's [workflow run history](https://github.com/satyamtomar524-tech/roomies/actions).
+Release checks on 3–4 October 2026 for FlatLedger 2.3.0. This records local evidence. Remote results are available in the repository's [workflow run history](https://github.com/satyamtomar524-tech/flatledger/actions).
 
 ## Results
 
 | Check | Result |
 |---|---|
 | Python behavioral suite | **203 passed** on Python 3.12.14 / Windows |
+| Expense report calculations | **4 passed**: period boundaries, intersecting filters, exact totals and safe CSV |
+| Spending report UI | Period/category/search, filtered download, unchanged lifetime balances, back navigation and deep-link reload checked in both transports |
 | JavaScript syntax | Passed with Node 24.19.0 |
 | Complete browser workflow | Passed using Playwright 1.62.1 and isolated headless Chrome 154.0.8037.58 |
 | Responsive pages | No horizontal overflow in all seven views at 320 px and 390 px; expense, repayment and monthly-bill dialog controls remain reachable |
@@ -15,8 +17,8 @@ Checked on 30 September 2026 for Roomies 2.2.1. This records local evidence. Rem
 | Browser storage | Saves survive reload; independent visitors have separate records; a second editor tab is blocked; a simulated IndexedDB write failure restores the previous database |
 | Browser exports and costs | Full JSON backup/restore, price records, repayments and monthly-bill workflow passed through the static transport |
 | Frontend regression loop | **10 cases passed in each transport**: local HTTP and the generated public build with real Pyodide/IndexedDB |
-| Visual inspection | Desktop and mobile home, room and kitchen screens, a narrow expense dialog, and a clearly fictional shared-cost example inspected |
-| Python distribution | Version 2.1 wheel was checked in the previous release; the 2.2.1 local source workflow passed. A fresh 2.2.1 wheel installation has not been checked |
+| Visual inspection | Redesigned desktop overview and expenses plus the 390 px overview inspected with labelled hypothetical data |
+| Python distribution | Version 2.1 wheel was checked in the previous release; the 2.3.0 local source workflow passed. A fresh 2.3.0 wheel installation has not been checked |
 
 The Python suite covers geometry, prices, HTTP/API routes, SQLite persistence, scheduling, household validation and shared expenses. The browser check uses a fresh disposable database, synthetic belongings, people, bills, products and prices, and a stopped scheduler. It does not contact a retailer or modify the user's workspace.
 
@@ -34,6 +36,8 @@ From the repository directory:
 
 ```sh
 python -m unittest discover -s tests -v
+node --test tests/reports.test.cjs
+node --check web/reports.js
 node --check web/app.js
 node --check web/flat.js
 node --check web/costs.js
@@ -99,4 +103,4 @@ Member names are local bookkeeping labels. Separate roommate accounts, multi-dev
 
 The live parser leaves delivery unknown. Its informational price-drop notice is not proof of a delivered-price bargain. Quote history represents observations, not every market price between them.
 
-Source packaging and local checks passed. The [public repository](https://github.com/satyamtomar524-tech/roomies) contains the source and workflow; `GITHUB_SETUP.md` explains how to obtain and update it.
+Source packaging and local checks passed. The [public repository](https://github.com/satyamtomar524-tech/flatledger) contains the source and workflow; `GITHUB_SETUP.md` explains how to obtain and update it.
