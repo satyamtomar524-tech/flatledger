@@ -730,6 +730,7 @@ function renderKitchen() {
 }
 
 function renderExpenses() {
+  if (!state?.flat || !state.flat_summary) return;
   const summary = state.flat_summary.expenses || {
     total_cents: 0,
     balances: [],

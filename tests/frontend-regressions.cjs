@@ -728,6 +728,164 @@ async function main() {
       );
       assert.equal(await page.locator("#backup-recovery").count(), 0);
     });
+    await test("backup preview follows the latest selected file", async (page) => {
+      const result = await page.evaluate(async (backup) => {
+        const first = structuredClone(backup);
+        first.room.name = "First backup";
+        const second = structuredClone(backup);
+        second.room.name = "Second backup";
+        let finishFirst;
+        const reading = readImport({
+          target: {
+            files: [
+              {
+                size: 100,
+                text: () =>
+                  new Promise((resolve) => {
+                    finishFirst = resolve;
+                  }),
+              },
+            ],
+          },
+        });
+        await readImport({
+          target: {
+            files: [{ size: 100, text: async () => JSON.stringify(second) }],
+          },
+        });
+        finishFirst(JSON.stringify(first));
+        await reading;
+        return {
+          name: importCandidate.room.name,
+          preview: $("#import-description").textContent,
+        };
+      }, baseline);
+      assert.equal(result.name, "Second backup");
+      assert.match(result.preview, /Second backup/);
+    });
+    await test("confirmed backup stays fixed while outstanding writes finish", async (page) => {
+      await page.locator("#data-menu-top").click();
+      await page.evaluate(async (backup) => {
+        const first = structuredClone(backup);
+        first.room.name = "Confirmed backup";
+        await readImport({
+          target: {
+            files: [{ size: 100, text: async () => JSON.stringify(first) }],
+          },
+        });
+        const original = api;
+        api = async (url, options) => {
+          if (url === "/api/room" && options?.method === "PUT") {
+            window.testWriteStarted = true;
+            await new Promise((resolve) => {
+              window.finishTestWrite = resolve;
+            });
+          }
+          return original(url, options);
+        };
+        itemById("bed").x_cm = 10;
+        markDirty(0);
+        window.testRoomSave = flushRoom();
+      }, baseline);
+      await page.waitForFunction(() => window.testWriteStarted);
+      await page.locator("#confirm-import").click();
+      const during = await page.evaluate(async (backup) => {
+        const second = structuredClone(backup);
+        second.room.name = "Unconfirmed backup";
+        await readImport({
+          target: {
+            files: [{ size: 100, text: async () => JSON.stringify(second) }],
+          },
+        });
+        const cancel = new Event("cancel", { cancelable: true });
+        $("#data-dialog").dispatchEvent(cancel);
+        const result = {
+          fileDisabled: $("#import-file").disabled,
+          closeDisabled: $("#data-dialog .close-dialog").disabled,
+          cancelBlocked: cancel.defaultPrevented,
+        };
+        window.finishTestWrite();
+        return result;
+      }, baseline);
+      await page.waitForFunction(() => !$("#data-dialog").open);
+      assert.equal((await request("/api/state")).room.name, "Confirmed backup");
+      assert.deepEqual(during, {
+        fileDisabled: true,
+        closeDisabled: true,
+        cancelBlocked: true,
+      });
+      assert.equal(await page.locator("#import-file").isEnabled(), true);
+    });
+    await test("reopening backup controls resets selection and pending reads", async (page) => {
+      await page.locator("#data-menu-top").click();
+      await page.locator("#import-file").setInputFiles({
+        name: "backup.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(baseline)),
+      });
+      await page.locator("#confirm-import").waitFor({ state: "visible" });
+      await page.evaluate(() => {
+        window.testPendingRead = readImport({
+          target: {
+            files: [
+              {
+                size: 100,
+                text: () =>
+                  new Promise((resolve) => {
+                    window.finishTestRead = resolve;
+                  }),
+              },
+            ],
+          },
+        });
+      });
+      await page.locator("#data-dialog .close-dialog").click();
+      await page.locator("#data-menu-top").click();
+      await page.evaluate(async (backup) => {
+        window.finishTestRead(JSON.stringify(backup));
+        await window.testPendingRead;
+      }, baseline);
+      assert.equal(await page.locator("#import-file").inputValue(), "");
+      assert.equal(await page.evaluate(() => importCandidate), null);
+      assert.equal(await page.locator("#import-preview").isVisible(), false);
+      await page.locator("#import-file").setInputFiles({
+        name: "backup.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(baseline)),
+      });
+      await page.locator("#confirm-import").waitFor({ state: "visible" });
+    });
+    await test("expense filters wait for workspace startup", async (page) => {
+      let release;
+      const gate = new Promise((resolve) => {
+        release = resolve;
+      });
+      const target = staticDir ? "**/browser-worker.mjs" : "**/api/state";
+      await page.route(target, async (route) => {
+        await gate;
+        await route.continue();
+      });
+      try {
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await page.locator('.navigation [data-view="expenses"]').click();
+        // Native controls and programmatic change events must both be safe before load.
+        await page.locator("#expense-search").dispatchEvent("input");
+        for (const id of [
+          "expense-period",
+          "expense-category",
+          "expense-search",
+        ])
+          assert.equal(await page.locator(`#${id}`).isDisabled(), true, id);
+      } finally {
+        release();
+      }
+      await page.waitForFunction(() => state !== null, null, {
+        timeout: 60000,
+      });
+      for (const id of ["expense-period", "expense-category", "expense-search"])
+        assert.equal(await page.locator(`#${id}`).isEnabled(), true, id);
+      await page.locator("#expense-search").fill("rent");
+    });
     if (failures.length)
       throw new Error(
         `${failures.length} frontend regression(s):\n${failures.join("\n")}`,

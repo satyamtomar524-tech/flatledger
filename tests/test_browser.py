@@ -15,6 +15,14 @@ class BrowserWorkspaceTests(unittest.TestCase):
     def call(self, path, method="GET", payload=None):
         return self.app.request(path, method, json.dumps(payload) if payload is not None else None)
 
+    def test_invalid_unicode_write_preserves_browser_backup(self):
+        before = self.app.storage.export()
+        room = {**before["room"], "name": "bad\ud800text"}
+        response = json.loads(self.app.dispatch("/api/room", "PUT", json.dumps(room)))
+        self.assertIn("valid Unicode", response.get("error", ""))
+        self.assertEqual(self.app.storage.export(), before)
+        self.assertEqual(json.loads(self.call("/api/export")["text"]), before)
+
     def test_same_room_rules_and_suggestions(self):
         current = self.call("/api/state")
         self.assertEqual(current["summary"]["area_m2"], 10.5)

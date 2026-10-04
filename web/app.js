@@ -20,6 +20,8 @@ let saveTimer = null;
 let savingPromise = null;
 let toastTimer = null;
 let importCandidate = null;
+let importSelectionRevision = 0;
+let importInProgress = false;
 let dragging = null;
 let settingsOpenings = [];
 let currentView = "home";
@@ -2543,7 +2545,17 @@ function downloadPlan() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function resetImportSelection() {
+  importSelectionRevision += 1;
+  importCandidate = null;
+  $("#import-file").value = "";
+  $("#import-preview").hidden = true;
+  $("#import-error").hidden = true;
+}
+
 async function readImport(event) {
+  if (importInProgress) return;
+  const revision = ++importSelectionRevision;
   const file = event.target.files[0];
   importCandidate = null;
   $("#import-preview").hidden = true;
@@ -2555,6 +2567,7 @@ async function readImport(event) {
         "This backup is larger than 32 MiB. FlatLedger backups must stay within 32 MiB.",
       );
     const data = JSON.parse(await file.text());
+    if (revision !== importSelectionRevision) return;
     if (
       !data.room ||
       !Array.isArray(data.room.items) ||
@@ -2572,30 +2585,43 @@ async function readImport(event) {
       `This file contains “${data.room.name || "a room"}”, ${data.room.items.length} room items and ${data.products.length} products.${flatCopy}`;
     $("#import-preview").hidden = false;
   } catch (error) {
+    if (revision !== importSelectionRevision) return;
     $("#import-error").textContent = error.message;
     $("#import-error").hidden = false;
   }
 }
 
 async function confirmImport() {
-  if (!importCandidate) return;
+  if (!importCandidate || importInProgress) return;
+  // Keep the reviewed file fixed while earlier autosaves finish.
+  const candidate = importCandidate;
+  const body = JSON.stringify(candidate);
+  importInProgress = true;
+  importSelectionRevision += 1;
+  const dialog = $("#data-dialog");
   const button = $("#confirm-import");
+  const label = button.textContent;
   button.disabled = true;
+  button.textContent = "Importing workspace…";
+  $("#import-file").disabled = true;
+  $(".data-actions", dialog).inert = true;
+  $$(".close-dialog", dialog).forEach((control) => (control.disabled = true));
+  dialog.setAttribute("aria-busy", "true");
+  $("#import-error").hidden = true;
   try {
     // Confirmed replacement can recover from a failed save; drain active writes first.
     await flushRoom().catch(() => {});
     await flushFlat().catch(() => {});
     await api("/api/import", {
       method: "POST",
-      body: JSON.stringify(importCandidate),
+      body,
     });
     selectedId = null;
     selectedJournalId = null;
     itemDrafts.clear();
     mutationRevision += 1;
     savedRevision = mutationRevision;
-    if (importCandidate.schema_version >= 2 && importCandidate.flat)
-      flatSaveError = null;
+    if (candidate.schema_version >= 2 && candidate.flat) flatSaveError = null;
     await reload();
     $("#data-dialog").close();
     toast(
@@ -2605,7 +2631,15 @@ async function confirmImport() {
     $("#import-error").textContent = error.message;
     $("#import-error").hidden = false;
   } finally {
+    importInProgress = false;
     button.disabled = false;
+    button.textContent = label;
+    $("#import-file").disabled = false;
+    $(".data-actions", dialog).inert = false;
+    $$(".close-dialog", dialog).forEach(
+      (control) => (control.disabled = false),
+    );
+    dialog.removeAttribute("aria-busy");
   }
 }
 
@@ -2765,11 +2799,17 @@ function wireEvents() {
   );
   [$("#data-menu-button"), $("#data-menu-top")].forEach((button) =>
     button.addEventListener("click", () => {
-      $("#import-preview").hidden = true;
-      $("#import-error").hidden = true;
+      if (importInProgress) return;
+      resetImportSelection();
       $("#data-dialog").showModal();
     }),
   );
+  $("#data-dialog").addEventListener("close", () => {
+    if (!importInProgress) resetImportSelection();
+  });
+  $("#data-dialog").addEventListener("cancel", (event) => {
+    if (importInProgress) event.preventDefault();
+  });
   $("#import-file").addEventListener("change", readImport);
   $("#confirm-import").addEventListener("click", confirmImport);
   window.addEventListener("beforeunload", (event) => {
@@ -2777,6 +2817,7 @@ function wireEvents() {
       savedRevision < mutationRevision ||
       flatSavingPromise ||
       flatSaveError ||
+      importInProgress ||
       itemDrafts.size
     ) {
       event.preventDefault();
@@ -2829,6 +2870,9 @@ function setWorkspaceAvailable(available) {
     "add-expense",
     "export-expenses",
     "export-spending",
+    "expense-period",
+    "expense-category",
+    "expense-search",
     "add-monthly-bill",
   ];
   controls.forEach((identity) => {

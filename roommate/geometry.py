@@ -28,6 +28,8 @@ def _number(value: Any, name: str, low: float, high: float) -> float:
 def _text(value: Any, name: str, maximum: int = 1000) -> str:
     if not isinstance(value, str) or len(value) > maximum:
         raise ValidationError(f"{name} must be text of at most {maximum} characters.")
+    if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+        raise ValidationError(f"{name} must contain valid Unicode text.")
     return value.strip()
 
 

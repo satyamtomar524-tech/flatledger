@@ -45,6 +45,22 @@ class ServerTests(unittest.TestCase):
         connection.close()
         return result
 
+    def test_invalid_unicode_write_preserves_a_readable_workspace(self):
+        before = self.storage.export()
+        room = {**before["room"], "name": "bad\ud800text"}
+        status, _, content = self.request("PUT", "/api/room", room)
+        self.assertEqual(status, 400)
+        self.assertIn("valid Unicode", json.loads(content)["error"])
+        self.assertEqual(self.storage.export(), before)
+        self.assertEqual(self.request("GET", "/api/state")[0], 200)
+
+    def test_invalid_unicode_field_name_returns_json_error(self):
+        before = self.storage.export()
+        status, _, content = self.request("PUT", "/api/flat", {"\ud800": "invalid"})
+        self.assertEqual(status, 400)
+        self.assertIn("Unknown", json.loads(content)["error"])
+        self.assertEqual(self.storage.export(), before)
+
     def test_state_and_exact_static_files(self):
         status, headers, content = self.request("GET", "/api/state")
         self.assertEqual(status, 200)

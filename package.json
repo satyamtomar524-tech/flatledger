@@ -1,6 +1,6 @@
 {
   "name": "flatledger-browser-checks",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "private": true,
   "description": "Optional browser checks for FlatLedger local and static builds.",
   "scripts": {

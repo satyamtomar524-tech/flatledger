@@ -1,5 +1,13 @@
 # Build journal
 
+## 4 October 2026 — FlatLedger 2.3.1
+
+The final audit found problems around interruptions, not just the normal flow. Selecting two backups quickly could show the first file after the second had finished loading. Changing the file while an autosave finished could import a file that had not been confirmed. Import now keeps the reviewed file fixed, ignores old file reads and blocks dismissal during replacement. Closing and reopening the dialog starts a fresh selection.
+
+Expense filters now wait for workspace loading. Text validation rejects malformed Unicode before it reaches storage, and HTTP error responses safely encode invalid field names. Normal international text is preserved.
+
+Kept the failing examples as regression tests and verified the fixes in the local server and the public browser build. The audit finished with 208 Python tests, four report tests, 14 frontend regression cases per transport and both complete browser workflows passing locally.
+
 ## 3 October 2026 — FlatLedger 2.3.0
 
 Renamed Roomies to FlatLedger and focused the product on household operations. Replaced playful navigation, large decorative headings and category sketches with restrained typography, a navy sidebar and factual product specifications. The overview shows recorded counts, current-month spending, outstanding tasks, recent bills and a read-only room preview.

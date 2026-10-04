@@ -43,6 +43,8 @@ def _text(value: Any, field: str, *, required: bool = False, limit: int = 500) -
         value = ""
     if not isinstance(value, str):
         raise ValueError(f"{field} must be text.")
+    if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+        raise ValueError(f"{field} must contain valid Unicode text.")
     value = value.strip()
     if len(value) > limit or any(ord(char) < 32 and char not in "\n\t" for char in value):
         raise ValueError(f"{field} is too long or contains control characters.")

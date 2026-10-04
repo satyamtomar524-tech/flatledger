@@ -1,12 +1,12 @@
 # Verification record
 
-Release checks on 3–4 October 2026 for FlatLedger 2.3.0. This records local evidence. Remote results are available in the repository's [workflow run history](https://github.com/satyamtomar524-tech/flatledger/actions).
+Release checks on 4 October 2026 for FlatLedger 2.3.1. This records local evidence. Remote results are available in the repository's [workflow run history](https://github.com/satyamtomar524-tech/flatledger/actions).
 
 ## Results
 
 | Check | Result |
 |---|---|
-| Python behavioral suite | **203 passed** on Python 3.12.14 / Windows |
+| Python behavioral suite | **208 passed** on Python 3.12.14 / Windows |
 | Expense report calculations | **4 passed**: period boundaries, intersecting filters, exact totals and safe CSV |
 | Spending report UI | Period/category/search, filtered download, unchanged lifetime balances, back navigation and deep-link reload checked in both transports |
 | JavaScript syntax | Passed with Node 24.19.0 |
@@ -16,9 +16,9 @@ Release checks on 3–4 October 2026 for FlatLedger 2.3.0. This records local ev
 | Public static build | Passed using self-hosted Pyodide 314.0.7 / Python 3.14.2; the browser made no HTTP API or external requests |
 | Browser storage | Saves survive reload; independent visitors have separate records; a second editor tab is blocked; a simulated IndexedDB write failure restores the previous database |
 | Browser exports and costs | Full JSON backup/restore, price records, repayments and monthly-bill workflow passed through the static transport |
-| Frontend regression loop | **10 cases passed in each transport**: local HTTP and the generated public build with real Pyodide/IndexedDB |
+| Frontend regression loop | **14 cases passed in each transport**: local HTTP and the generated public build with real Pyodide/IndexedDB |
 | Visual inspection | Redesigned desktop overview and expenses plus the 390 px overview inspected with labelled hypothetical data |
-| Python distribution | Version 2.1 wheel was checked in the previous release; the 2.3.0 local source workflow passed. A fresh 2.3.0 wheel installation has not been checked |
+| Python distribution | Version 2.1 wheel was checked in an earlier release; the 2.3.1 local source workflow passed. A fresh 2.3.1 wheel installation has not been checked |
 
 The Python suite covers geometry, prices, HTTP/API routes, SQLite persistence, scheduling, household validation and shared expenses. The browser check uses a fresh disposable database, synthetic belongings, people, bills, products and prices, and a stopped scheduler. It does not contact a retailer or modify the user's workspace.
 
@@ -62,7 +62,11 @@ The browser job uses Chrome already installed on the Ubuntu 24.04 runner, select
 
 For this review I reproduced each issue with disposable data, kept the failing case as a regression, changed the relevant code, and reran that check. I then ran the complete Python suite and both browser workflows. A passing check records the tested behavior; it does not prove that every possible room or browser is covered.
 
-`node tests/frontend-regressions.cjs` checks focus after autosave, edits during a delayed refresh, stale position suggestions, purchased-item links, invalid drafts, large backup restore, failed-save recovery, edits during export, concurrent room/flat save status, and export errors. Set `ROOMIES_STATIC_DIR` to `dist` to repeat the same cases through the browser worker. GitHub Actions runs both modes after building the public app.
+`node tests/frontend-regressions.cjs` checks focus after autosave, edits during a delayed refresh, stale position suggestions, purchased-item links, invalid drafts, large backup restore, failed-save recovery, edits during export, concurrent room/flat save status, export errors, out-of-order backup file reads, changing a file during import, reopening backup controls, and using expense filters during startup. Set `ROOMIES_STATIC_DIR` to `dist` to repeat the same cases through the browser worker. GitHub Actions runs both modes after building the public app.
+
+The 2.3.1 audit reproduced four frontend failures before changing the implementation. A slower file read could replace the preview of a newer selection; a different file chosen while autosave finished could replace the confirmed backup; reopening the dialog retained the previous file and unfinished reads; and expense filters ran before workspace loading completed. Those cases now pass in both transports. The confirmed import also blocks file changes and dialog dismissal until it completes.
+
+Backend checks reproduced acceptance of unpaired Unicode surrogates in saved room and flat text, which could make subsequent UTF-8 responses or backups fail. Invalid field names could also break the HTTP error response itself. Validation now rejects malformed text before writing; error responses safely escape field names. Tests verify rejected writes preserve the previous workspace and normal German, Hindi and emoji text still round-trips through a backup.
 
 ## Important regressions covered
 

@@ -115,7 +115,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(body)
 
     def _json(self, status: int, payload: dict):
-        self._reply(status, json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8"), "application/json; charset=utf-8")
+        # Invalid field names can appear in error messages; escape them safely too.
+        self._reply(status, json.dumps(payload, ensure_ascii=True, allow_nan=False).encode("utf-8"), "application/json; charset=utf-8")
 
     def _body(self, maximum: int = MAX_BODY_BYTES) -> dict:
         if self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":

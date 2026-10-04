@@ -31,6 +31,32 @@ class StorageTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_invalid_unicode_cannot_poison_saved_records(self):
+        before = self.storage.export()
+        for bad in ("bad\ud800text", "bad\udffftext"):
+            room = {**before["room"], "name": bad}
+            flat = household_data()
+            flat["members"][0]["name"] = bad
+            expense_flat = household_data()
+            expense_flat["expenses"][0]["title"] = bad
+            for label, save, value in (
+                ("room", self.storage.save_room, room),
+                ("member", self.storage.save_flat, flat),
+                ("expense", self.storage.save_flat, expense_flat),
+                ("product", self.storage.save_product, product_data(name=bad)),
+            ):
+                with self.subTest(label=label, bad=repr(bad)):
+                    with self.assertRaisesRegex(ValueError, "valid Unicode"):
+                        save(value)
+                    self.assertEqual(self.storage.export(), before)
+
+    def test_valid_international_text_survives_utf8_backup(self):
+        name = "München · कमरा · 🏠"
+        self.storage.save_room({**self.storage.state()["room"], "name": name})
+        backup = json.loads(json.dumps(self.storage.export(), ensure_ascii=False).encode("utf-8"))
+        self.storage.import_data(backup)
+        self.assertEqual(self.storage.state()["room"]["name"], name)
+
     def test_seed_has_no_fake_prices_or_notifications(self):
         state = self.storage.state()
         self.assertEqual(state["products"], [])

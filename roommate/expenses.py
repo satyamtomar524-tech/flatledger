@@ -37,6 +37,8 @@ def _identity(value: Any, label: str) -> str:
 def _text(value: Any, label: str, maximum: int, *, required: bool = False) -> str:
     if not isinstance(value, str) or len(value) > maximum:
         raise ValidationError(f"{label} must be text of at most {maximum} characters.")
+    if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+        raise ValidationError(f"{label} must contain valid Unicode text.")
     value = value.strip()
     if required and not value:
         raise ValidationError(f"{label} cannot be empty.")
