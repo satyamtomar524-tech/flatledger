@@ -1,39 +1,23 @@
 # FlatLedger
 
-**A private workspace for household inventory, space planning and shared spending.**
+A household app for finding your belongings, planning a room and keeping shared bills clear.
 
-I started with a practical question: would a new desk fit in my room before I bought it? I also needed a way to remember where things were kept and keep shared bills clear. FlatLedger brings those tasks into one workspace. The focus is useful records and checks that I can explain and test.
+[Try the app](https://roomies-satyam.satyamtomar524.chatgpt.site/) · [User guide](docs/PROJECT_GUIDE.md) · [Find a file or guide](docs/README.md)
 
-**[Open the application](https://roomies-satyam.satyamtomar524.chatgpt.site/)** · [Project guide](docs/PROJECT_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [Verification](docs/VERIFICATION.md)
+![FlatLedger overview](docs/screenshots/home-desktop.png)
 
-![FlatLedger workspace overview](docs/screenshots/home-desktop.png)
+## What it does
 
-## Core workflows
+- Record belongings, their owner and the exact place they are stored.
+- Keep a kitchen stock list and turn low items into a shopping list.
+- Split bills, record repayments and review spending by month or category.
+- Arrange furniture in a measured room and keep notes on planned purchases.
 
-| Area | Purpose |
-|---|---|
-| Overview | See this month's spending, inventory counts, restock tasks, recent bills and a room preview |
-| Space planner | Arrange measured furniture; check boundaries, overlaps and defined clearances; reserve future space |
-| Inventory | Record an item's owner, quantity, room and exact storage location; search and filter records |
-| Kitchen stock | Maintain fridge, freezer and pantry entries; turn low/out entries into a shopping checklist |
-| Expenses | Split bills in integer cents, record repayments, review monthly bill templates, filter spending by period/category and export reports |
-| Purchase planning | Link exact product dimensions to a reservation and keep dated price, delivery and variant evidence |
+The app starts with an empty household ledger and a labelled **3 × 3.5 m sample room**. Replace the sample measurements with your own before checking furniture fit.
 
-The application starts with a labelled **3 × 3.5 m sample room** and an empty household ledger. Replace the sample dimensions before relying on a fit result. No possessions or financial records are invented.
+## Run on your computer
 
-## What is feasible today
-
-This release is a **single-workspace household tool**. A person can maintain the household records and use exports to discuss costs with flatmates. The public website saves each visitor's SQLite database in their own browser through IndexedDB. Sharing the application link gives a friend a separate workspace. Export a backup to move between devices; clearing site data removes stored records.
-
-The expense report filters **recorded bills**, using their bill date. Repayments change outstanding balances without increasing spending. Reports use the selected period/category/search; balances always use the complete ledger. All amounts are EUR; there is no currency conversion or bank connection.
-
-The room planner uses rectangular footprints and explicit clearance rules. It supports rough planning, not construction drawings or 3D rendering. Purchase checks are deterministic rules, not an AI model. The browser edition uses manual price observations. The local server can check a narrow class of permitted public JSON-LD product pages; no real retailer has yet been demonstrated as compatible. There is no always-on shopping crawler.
-
-Live household accounts and synchronization are future work. They would require authentication, permissions, conflict handling and a hosted database. See the [scope and feasibility record](docs/PRODUCT_SCOPE.md).
-
-## Run locally
-
-Python 3.10 or later; the application has no third-party Python runtime dependencies.
+You need Python 3.10 or newer. No extra Python packages are required.
 
 ```sh
 git clone https://github.com/satyamtomar524-tech/flatledger.git
@@ -41,29 +25,39 @@ cd flatledger
 python -m roommate --no-tracker
 ```
 
-Open `http://127.0.0.1:8765`. Installing with `pip install .` also exposes the `flatledger` command. The original `roommate` module and `roomies` command remain compatible. The existing public URL and browser storage namespace are retained through the rename to preserve records.
+Open <http://127.0.0.1:8765>. The Python module still uses the original name, `roommate`. On Windows, `./start.ps1 --no-tracker` can also start the app from the code folder.
 
-## Implementation and checks
+## Where to find things
 
-Python validates records, calculates geometry and expense splits, and persists SQLite transactions. Plain JavaScript and SVG handle the interface. The static version runs the same Python rules in a Pyodide worker and serves its runtime files from the same origin. No external AI service or API key is required.
+| I want to… | Open |
+|---|---|
+| Learn how to use the app | [User guide](docs/PROJECT_GUIDE.md) |
+| Find or update something on GitHub | [GitHub guide](docs/GITHUB_SETUP.md) |
+| Understand the code | [Architecture and file map](docs/ARCHITECTURE.md) |
+| Check what works and how it was tested | [Verification record](docs/VERIFICATION.md) |
+| Explain the project in an interview | [Portfolio notes](docs/PORTFOLIO.md) |
+
+The source uses Python and SQLite for saved records and calculations, with plain JavaScript and SVG for the interface. The browser edition runs the Python code through Pyodide. It needs no AI service or API key.
+
+## Data and limits
+
+The public app saves records in your current browser. Export a backup before clearing site data or moving devices. Each visitor has a separate workspace; shared accounts and device synchronization are not implemented.
+
+Bills use EUR and exact cents. Repayments record what you enter; the app does not connect to a bank or send money. Room checks use rectangles and clearances for rough planning. They are not construction drawings.
+
+The browser edition uses manually recorded product prices. The local server has a limited product-page checker, but no real retailer has been demonstrated as compatible. [Scope and limitations](docs/PRODUCT_SCOPE.md) explains these boundaries.
+
+## Check a change
+
+From the code folder:
 
 ```sh
 python -B -m unittest discover -s tests -q
 node --test tests/reports.test.cjs
-npm install --ignore-scripts
-npm run check
-npm run test:browser
-npm run test:regressions
-python scripts/build_browser.py
-npm run test:public
 ```
 
-Browser checks use disposable databases. [Verification instructions](docs/VERIFICATION.md) include installed-browser settings and the static regression command. [GitHub Actions](https://github.com/satyamtomar524-tech/flatledger/actions) runs the checks on updates.
+Node.js is needed for the second command. Optional browser checks and earlier results are in the [verification guide](docs/VERIFICATION.md).
 
-The project was developed with coding assistance. [Portfolio notes](docs/PORTFOLIO.md) describe the implementation and an interview demonstration. Actual use, savings and productivity improvements have not been measured.
+Developed with coding assistance. Actual use, savings and productivity improvements have not been measured.
 
-## References and license
-
-[Room-Planner](https://github.com/EricAndrechek/Room-Planner) and [price-tracker](https://github.com/sonoyumi/price-tracker) were feature references for the initial idea. Their source was not copied.
-
-MIT license · Satyam Tomar
+MIT license · Satyam Tomar. [Room-Planner](https://github.com/EricAndrechek/Room-Planner) and [price-tracker](https://github.com/sonoyumi/price-tracker) inspired early features; their source was not copied.
