@@ -1,5 +1,8 @@
 # FlatLedger
 
+[![Tests](https://img.shields.io/badge/tests-Python%20%2B%20Node-1f6feb)](docs/VERIFICATION.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A household app for finding your belongings, planning a room and keeping shared bills clear.
 
 [Try the app](https://roomies-satyam.satyamtomar524.chatgpt.site/) · [User guide](docs/PROJECT_GUIDE.md) · [Find a file or guide](docs/README.md)
